@@ -10,6 +10,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - default
 
   web:
     build: .
@@ -22,15 +24,26 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.food.rule=Host(`food.builty.org`)"
       - "traefik.http.routers.food.entrypoints=websecure"
-      - "traefik.http.routers.food.tls.certresolver=myresolver"
-      - "traefik.http.services.food.loadbalancer.server.port=8001"
-    ports:
-      - "8001:8000"
+      - "traefik.http.routers.food.tls.certresolver=letsencrypt"
+      - "traefik.http.services.food.loadbalancer.server.port=8000"
+      # HTTP to HTTPS redirect
+      - "traefik.http.routers.food-http.rule=Host(`food.builty.org`)"
+      - "traefik.http.routers.food-http.entrypoints=web"
+      - "traefik.http.routers.food-http.middlewares=redirect-to-https"
+    expose:
+      - "8000"
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - default
+      - smart-home-be_default
+
+networks:
+  smart-home-be_default:
+    external: true
 
 volumes:
   postgres_data:
