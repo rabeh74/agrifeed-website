@@ -28,6 +28,17 @@ DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
+# CSRF Trusted Origins - Add your production domain here
+CSRF_TRUSTED_ORIGINS = [
+    'https://food.builty.org',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+# Add any additional trusted origins from environment variable
+if os.environ.get('CSRF_TRUSTED_ORIGINS'):
+    CSRF_TRUSTED_ORIGINS.extend(os.environ.get('CSRF_TRUSTED_ORIGINS').split(','))
+
 
 # Application definition
 
