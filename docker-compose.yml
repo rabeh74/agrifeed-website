@@ -18,6 +18,12 @@ services:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.food.rule=Host(`food.builty.org`)"
+      - "traefik.http.routers.food.entrypoints=websecure"
+      - "traefik.http.routers.food.tls.certresolver=myresolver"
+      - "traefik.http.services.food.loadbalancer.server.port=8001"
     ports:
       - "8001:8000"
     env_file:
