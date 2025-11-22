@@ -1,0 +1,248 @@
+{% extends 'store/base.html' %}
+
+{% block title %}لوحة الإحصائيات - Agree Feed{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><span>📊</span> لوحة الإحصائيات</h2>
+        <a href="{% url 'store:create_order' %}" class="btn btn-success">
+        <span>🛒</span> طلب جديد
+    </a>
+</div>
+
+<!-- Filter Section -->
+<div class="card">
+    <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+        <span>📅</span> تصفية حسب التاريخ
+    </h3>
+
+    <form method="get" action="{% url 'store:dashboard' %}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+            <button type="submit" name="filter" value="all"
+                    class="btn {% if filter_type == 'all' %}btn-success{% else %}btn-secondary{% endif %}"
+                    style="width: 100%; justify-content: center;">
+                الكل
+            </button>
+            <button type="submit" name="filter" value="today"
+                    class="btn {% if filter_type == 'today' %}btn-success{% else %}btn-secondary{% endif %}"
+                    style="width: 100%; justify-content: center;">
+                اليوم
+            </button>
+            <button type="submit" name="filter" value="week"
+                    class="btn {% if filter_type == 'week' %}btn-success{% else %}btn-secondary{% endif %}"
+                    style="width: 100%; justify-content: center;">
+                هذا الأسبوع
+            </button>
+            <button type="submit" name="filter" value="month"
+                    class="btn {% if filter_type == 'month' %}btn-success{% else %}btn-secondary{% endif %}"
+                    style="width: 100%; justify-content: center;">
+                هذا الشهر
+            </button>
+        </div>
+
+        <div style="border-top: 2px solid var(--gray-100); padding-top: 1.25rem;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 1rem; font-weight: 600;">فترة مخصصة</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>من تاريخ</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>إلى تاريخ</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div>
+                    <button type="submit" name="filter" value="custom" class="btn btn-success" style="width: 100%; padding: 0.825rem 1.5rem;">
+                        <span>🔍</span> تصفية
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div style="margin-top: 1.25rem; padding: 1rem; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: var(--border-radius);">
+        <p style="color: #1e40af; margin: 0; font-weight: 600;">
+            <span>ℹ️</span> الفترة الحالية: <strong>{{ filter_label }}</strong>
+        </p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-3">
+    <!-- Total Orders -->
+    <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <span style="font-size: 2.5rem; opacity: 0.9;">📦</span>
+            <div style="flex: 1;">
+                <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; opacity: 0.95; font-weight: 600;">إجمالي الطلبات</h3>
+                <p style="font-size: 2.5rem; font-weight: 700; margin: 0;">{{ total_orders }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <span style="font-size: 2.5rem; opacity: 0.9;">💰</span>
+            <div style="flex: 1;">
+                <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; opacity: 0.95; font-weight: 600;">إجمالي الإيرادات</h3>
+                <p style="font-size: 2rem; font-weight: 700; margin: 0;">{{ total_revenue|floatformat:2 }} ج.م</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Order -->
+    <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <span style="font-size: 2.5rem; opacity: 0.9;">📊</span>
+            <div style="flex: 1;">
+                <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; opacity: 0.95; font-weight: 600;">متوسط قيمة الطلب</h3>
+                <p style="font-size: 2rem; font-weight: 700; margin: 0;">{{ average_order|floatformat:2 }} ج.م</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Breakdown -->
+<div class="card">
+    <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+        <span>📈</span> التوزيع حسب الحالة
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+        <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: var(--border-radius);">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✓</div>
+            <div class="badge badge-completed" style="font-size: 1rem; margin-bottom: 0.75rem;">مكتمل</div>
+            <p style="font-size: 2.5rem; font-weight: 700; margin: 0; color: #065f46;">{{ status_stats.completed }}</p>
+        </div>
+        <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: var(--border-radius);">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✕</div>
+            <div class="badge badge-cancelled" style="font-size: 1rem; margin-bottom: 0.75rem;">ملغي</div>
+            <p style="font-size: 2.5rem; font-weight: 700; margin: 0; color: #991b1b;">{{ status_stats.cancelled }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Orders List -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.25rem; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+            <span>📋</span> الطلبات ({{ filter_label }})
+        </h3>
+        <a href="{% url 'store:order_list' %}" class="btn btn-sm">
+            عرض الكل →
+        </a>
+    </div>
+
+    {% if orders_with_totals %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الطلب</th>
+                    <th>العميل</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                    <th>المبلغ الإجمالي</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in orders_with_totals %}
+                <tr>
+                    <td><strong style="color: var(--primary-color);">#{{ item.order.id }}</strong></td>
+                    <td><strong>{{ item.order.customer_name }}</strong></td>
+                    <td>
+                        {% if item.order.status == 'completed' %}
+                            <span class="badge badge-completed">✓ مكتمل</span>
+                        {% elif item.order.status == 'cancelled' %}
+                            <span class="badge badge-cancelled">✕ ملغي</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.order.created_at|date:"Y/m/d H:i" }}</td>
+                    <td><span class="price">{{ item.total|floatformat:2 }} ج.م</span></td>
+                    <td>
+                        <a href="{% url 'store:order_detail' item.order.id %}" class="btn btn-sm">
+                            <span>👁️</span> عرض
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>لا توجد طلبات</h3>
+        <p>لا توجد طلبات في الفترة المحددة</p>
+        <a href="{% url 'store:create_order' %}" class="btn btn-success">
+            <span>🛒</span> إنشاء طلب جديد
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_css %}
+<style>
+    /* Dashboard mobile optimizations */
+    @media (max-width: 968px) {
+        /* Make filter buttons stack on mobile */
+        .card form > div:first-child {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        /* Custom date range inputs */
+        .card form > div:last-child > div {
+            grid-template-columns: 1fr !important;
+        }
+
+        .card form > div:last-child > div > div:last-child {
+            width: 100%;
+        }
+
+        .card form > div:last-child > div > div:last-child button {
+            width: 100%;
+        }
+
+        /* Statistics cards text sizing */
+        .card p {
+            font-size: 2rem !important;
+        }
+
+        .card h3 {
+            font-size: 0.875rem !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        /* Stack filter buttons on small mobile */
+        .card form > div:first-child {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Smaller statistics cards */
+        .card p {
+            font-size: 1.75rem !important;
+        }
+
+        .card h3 {
+            font-size: 0.8125rem !important;
+        }
+
+        /* Status breakdown */
+        .card > div:last-child {
+            grid-template-columns: 1fr !important;
+        }
+
+        /* Reduce emoji size */
+        .card > div:last-child > div > div:first-child {
+            font-size: 2rem !important;
+        }
+
+        .card > div:last-child > div p {
+            font-size: 2rem !important;
+        }
+    }
+</style>
+{% endblock %}
+{% endblock %}

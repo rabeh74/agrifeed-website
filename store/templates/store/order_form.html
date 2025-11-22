@@ -1,0 +1,79 @@
+{% extends 'store/base.html' %}
+
+{% block title %}تعديل الطلب #{{ order.id }} - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'store:order_detail' order.id %}" class="btn">← العودة لتفاصيل الطلب</a>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="margin-bottom: 25px; color: #2c3e50;">تعديل الطلب #{{ order.id }}</h2>
+
+    <div class="alert" style="background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; margin-bottom: 20px; padding: 12px; border-radius: 4px;">
+        <strong>ملاحظة:</strong> يمكنك تعديل معلومات العميل وحالة الطلب فقط. لا يمكن تعديل المنتجات في الطلب.
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>{{ form.customer_name.label }} *</label>
+            {{ form.customer_name }}
+            {% if form.customer_name.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.customer_name.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>{{ form.customer_email.label }} *</label>
+            {{ form.customer_email }}
+            {% if form.customer_email.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.customer_email.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>{{ form.customer_phone.label }} *</label>
+            {{ form.customer_phone }}
+            {% if form.customer_phone.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.customer_phone.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>{{ form.status.label }} *</label>
+            {{ form.status }}
+            <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                <strong>مكتمل</strong> للطلبات المؤكدة أو <strong>ملغي</strong> للطلبات الملغاة
+            </div>
+            {% if form.status.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.status.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.notes.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button type="submit" class="btn btn-success" style="flex: 1;">حفظ التعديلات</button>
+            <a href="{% url 'store:order_detail' order.id %}" class="btn" style="flex: 1; text-align: center; line-height: 38px;">إلغاء</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

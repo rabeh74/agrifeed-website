@@ -1,0 +1,38 @@
+{% extends 'store/base.html' %}
+
+{% block title %}حذف منتج - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'store:product_list' %}" class="btn">← العودة للمنتجات</a>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="margin-bottom: 25px; color: #e74c3c;">⚠️ تأكيد الحذف</h2>
+
+    <div class="alert alert-error" style="margin-bottom: 25px;">
+        <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه!
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 25px;">
+        <h3 style="margin-bottom: 15px; color: #2c3e50;">{{ product.name }}</h3>
+        <p style="color: #666; margin-bottom: 10px;">{{ product.description }}</p>
+        <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid #ddd;">
+            <span><strong>السعر:</strong> {{ product.price }} ج.م</span>
+            <span><strong>المخزون:</strong> {{ product.stock }}</span>
+        </div>
+    </div>
+
+    <p style="margin-bottom: 25px; color: #666;">
+        هل أنت متأكد من حذف هذا المنتج؟ سيتم حذف جميع البيانات المرتبطة به.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-danger" style="flex: 1;">نعم، احذف المنتج</button>
+            <a href="{% url 'store:product_list' %}" class="btn" style="flex: 1; text-align: center; line-height: 38px;">إلغاء</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

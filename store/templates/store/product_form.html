@@ -1,0 +1,148 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{% if action == 'add' %}إضافة منتج{% else %}تعديل منتج{% endif %} - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'store:product_list' %}" class="btn btn-secondary">
+        <span>←</span> العودة للمنتجات
+    </a>
+</div>
+
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">
+            {% if action == 'add' %}
+                <span>➕</span> إضافة منتج جديد
+            {% else %}
+                <span>✏️</span> تعديل المنتج: {{ product.name }}
+            {% endif %}
+        </h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="productForm">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>
+                <span>📝</span> {{ form.name.label }} <span style="color: var(--danger-color);">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>✕</span> {{ form.name.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>
+                <span>📄</span> {{ form.description.label }} <span style="color: var(--danger-color);">*</span>
+            </label>
+            {{ form.description }}
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                صف المنتج بشكل واضح وجذاب
+            </div>
+            {% if form.description.errors %}
+                <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>✕</span> {{ form.description.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>
+                <span>🖼️</span> {{ form.image.label }}
+            </label>
+            {% if action == 'edit' and product.image %}
+                <div style="margin-bottom: 1rem; padding: 1rem; background: var(--gray-50); border-radius: var(--border-radius);">
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">الصورة الحالية:</p>
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                         style="max-width: 250px; width: 100%; height: auto; border-radius: var(--border-radius); box-shadow: var(--shadow-md);">
+                </div>
+            {% endif %}
+            <div style="position: relative;">
+                {{ form.image }}
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <span>ℹ️</span> يفضل استخدام صور بجودة عالية (JPG, PNG)
+                </div>
+            </div>
+            {% if form.image.errors %}
+                <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>✕</span> {{ form.image.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>
+                    <span>💰</span> {{ form.price.label }} <span style="color: var(--danger-color);">*</span>
+                </label>
+                {{ form.price }}
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    بالجنيه المصري
+                </div>
+                {% if form.price.errors %}
+                    <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>✕</span> {{ form.price.errors|first }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>
+                    <span>📦</span> {{ form.stock.label }} <span style="color: var(--danger-color);">*</span>
+                </label>
+                {{ form.stock }}
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    الكمية المتوفرة
+                </div>
+                {% if form.stock.errors %}
+                    <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>✕</span> {{ form.stock.errors|first }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid var(--gray-100);">
+            <button type="submit" class="btn btn-success" style="flex: 1; padding: 1rem; font-size: 1rem;">
+                <span>{% if action == 'add' %}✓{% else %}💾{% endif %}</span>
+                {% if action == 'add' %}إضافة المنتج{% else %}حفظ التعديلات{% endif %}
+            </button>
+            <a href="{% url 'store:product_list' %}" class="btn btn-secondary" style="flex: 1; padding: 1rem; font-size: 1rem; justify-content: center;">
+                <span>✕</span> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+{% block extra_css %}
+<style>
+    /* Image preview styling */
+    input[type="file"] {
+        padding: 0.75rem;
+        background: var(--gray-50);
+        border: 2px dashed var(--gray-300);
+        cursor: pointer;
+    }
+
+    input[type="file"]:hover {
+        border-color: var(--primary-color);
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    /* Number input styling */
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+{% endblock %}

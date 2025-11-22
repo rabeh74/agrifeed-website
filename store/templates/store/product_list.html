@@ -1,0 +1,147 @@
+{% extends 'store/base.html' %}
+
+{% block title %}المنتجات - Agree Feed{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><span>📦</span> قائمة المنتجات</h2>
+    <a href="{% url 'store:add_product' %}" class="btn btn-success">
+        <span>➕</span> إضافة منتج
+    </a>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card">
+    <form method="get" action="{% url 'store:product_list' %}">
+        <div class="grid grid-4">
+            <!-- Search Box -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>🔍 بحث</label>
+                <input type="text" name="search" class="form-control" placeholder="ابحث عن منتج..." value="{{ search_query }}">
+            </div>
+
+            <!-- Stock Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>📊 حالة المخزون</label>
+                <select name="stock" class="form-control">
+                    <option value="all" {% if stock_filter == 'all' %}selected{% endif %}>الكل</option>
+                    <option value="in_stock" {% if stock_filter == 'in_stock' %}selected{% endif %}>متوفر</option>
+                    <option value="low_stock" {% if stock_filter == 'low_stock' %}selected{% endif %}>مخزون منخفض (≤10)</option>
+                    <option value="out_of_stock" {% if stock_filter == 'out_of_stock' %}selected{% endif %}>غير متوفر</option>
+                </select>
+            </div>
+
+            <!-- Sort -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>🔄 ترتيب حسب</label>
+                <select name="sort" class="form-control">
+                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>الأحدث أولاً</option>
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>الأقدم أولاً</option>
+                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>الاسم (أ-ي)</option>
+                    <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>الاسم (ي-أ)</option>
+                    <option value="price" {% if sort_by == 'price' %}selected{% endif %}>السعر (الأقل)</option>
+                    <option value="-price" {% if sort_by == '-price' %}selected{% endif %}>السعر (الأعلى)</option>
+                    <option value="stock" {% if sort_by == 'stock' %}selected{% endif %}>المخزون (الأقل)</option>
+                    <option value="-stock" {% if sort_by == '-stock' %}selected{% endif %}>المخزون (الأكثر)</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn" style="width: 100%;">
+                    <span>🔍</span> تطبيق
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Products Count -->
+{% if search_query or stock_filter != 'all' %}
+<div class="card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-right: 4px solid #3b82f6;">
+    <p style="margin: 0; color: #1e40af; font-weight: 600;">
+        <span>ℹ️</span> تم العثور على {{ products.count }} منتج
+        {% if search_query %} في نتائج البحث عن "{{ search_query }}"{% endif %}
+    </p>
+</div>
+{% endif %}
+
+{% if products %}
+<div class="grid grid-3">
+    {% for product in products %}
+    <div class="card" style="display: flex; flex-direction: column;">
+        <!-- Product Image -->
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                 style="width: 100%; height: 220px; object-fit: cover; border-radius: var(--border-radius); margin-bottom: 1.25rem;">
+        {% else %}
+            <div style="width: 100%; height: 220px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                        border-radius: var(--border-radius); margin-bottom: 1.25rem;
+                        display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem;">
+                <span style="font-size: 4rem; opacity: 0.3;">📦</span>
+                <span style="color: #9ca3af; font-size: 0.875rem;">لا توجد صورة</span>
+            </div>
+        {% endif %}
+
+        <!-- Product Info -->
+        <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 1.25rem;">{{ product.name }}</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6; flex-grow: 1;">
+            {{ product.description|truncatewords:15 }}
+        </p>
+
+        <!-- Product Meta -->
+        <div style="border-top: 2px solid var(--gray-100); padding-top: 1.25rem; margin-top: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="price">{{ product.price }} ج.م</span>
+                <span class="badge {% if product.stock > 10 %}badge-completed{% elif product.stock > 0 %}badge-pending{% else %}badge-cancelled{% endif %}">
+                    {% if product.stock > 10 %}
+                        ✓ متوفر: {{ product.stock }}
+                    {% elif product.stock > 0 %}
+                        ⚠ منخفض: {{ product.stock }}
+                    {% else %}
+                        ✕ غير متوفر
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Created Date -->
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                <span>📅</span> أضيف في {{ product.created_at|date:"Y/m/d" }}
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.75rem;">
+                <a href="{% url 'store:edit_product' product.id %}" class="btn btn-sm" style="flex: 1; text-align: center; justify-content: center;">
+                    <span>✏️</span> تعديل
+                </a>
+                <a href="{% url 'store:delete_product' product.id %}" class="btn btn-danger btn-sm" style="flex: 1; text-align: center; justify-content: center;">
+                    <span>🗑️</span> حذف
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card empty-state">
+    <div class="empty-state-icon">📦</div>
+    <h3>لا توجد منتجات</h3>
+    <p>
+        {% if search_query %}
+            لم يتم العثور على منتجات تطابق بحثك عن "{{ search_query }}"
+        {% else %}
+            لا توجد منتجات حالياً في النظام
+        {% endif %}
+    </p>
+    {% if search_query %}
+        <a href="{% url 'store:product_list' %}" class="btn">
+            <span>↻</span> عرض جميع المنتجات
+        </a>
+    {% else %}
+        <a href="{% url 'store:add_product' %}" class="btn btn-success">
+            <span>➕</span> إضافة أول منتج
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

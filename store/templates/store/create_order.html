@@ -1,0 +1,322 @@
+{% extends 'store/base.html' %}
+
+{% block title %}إنشاء طلب جديد - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'store:order_list' %}" class="btn">← العودة للطلبات</a>
+</div>
+
+<div class="card">
+    <h2 style="margin-bottom: 25px; color: #2c3e50;">إنشاء طلب جديد</h2>
+
+    <form method="post" id="orderForm">
+        {% csrf_token %}
+
+        <h3 style="margin-bottom: 15px; color: #555; font-size: 18px;">معلومات العميل</h3>
+
+        <div class="form-group">
+            <label>اسم العميل *</label>
+            {{ form.customer_name }}
+            {% if form.customer_name.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.customer_name.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>البريد الإلكتروني *</label>
+            {{ form.customer_email }}
+            {% if form.customer_email.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.customer_email.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>رقم الهاتف *</label>
+            {{ form.customer_phone }}
+            {% if form.customer_phone.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.customer_phone.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>حالة الطلب *</label>
+            {{ form.status }}
+            <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                اختر: <strong>مكتمل</strong> للطلبات المؤكدة أو <strong>ملغي</strong> للطلبات الملغاة
+            </div>
+            {% if form.status.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.status.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label>ملاحظات (اختياري)</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.notes.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+
+        <h3 style="margin-bottom: 15px; color: #555; font-size: 18px;">المنتجات</h3>
+
+        <div id="productItems"></div>
+
+        <button type="button" onclick="addProductRow()" class="btn btn-success" style="margin-top: 10px;">
+            + إضافة منتج
+        </button>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">الإجمالي:</h3>
+                <h2 id="totalPrice" class="price" style="margin: 0;">0.00 ج.م</h2>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; padding: 15px; font-size: 16px;">
+            إنشاء الطلب
+        </button>
+    </form>
+</div>
+
+{% block extra_css %}
+<style>
+    .product-row {
+        background: var(--gray-50);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 1rem;
+        border: 2px solid var(--gray-200);
+    }
+
+    .product-row-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr auto;
+        gap: 1rem;
+        align-items: end;
+    }
+
+    /* Tablet and mobile */
+    @media (max-width: 968px) {
+        .product-row-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .product-row {
+            padding: 1.25rem;
+        }
+
+        .product-row .btn {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+
+    /* Mobile phones */
+    @media (max-width: 576px) {
+        .product-row {
+            padding: 1rem;
+        }
+
+        #totalPrice {
+            font-size: 1.5rem !important;
+        }
+    }
+
+    /* Make error messages more visible */
+    .form-group select,
+    .form-group input,
+    .form-group textarea {
+        border: 2px solid var(--gray-200);
+    }
+
+    .form-group select.error,
+    .form-group input.error,
+    .form-group textarea.error {
+        border-color: var(--danger-color) !important;
+        background-color: #fff5f5;
+    }
+
+    /* Status dropdown specific styling */
+    select[name="status"] {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        background-color: #fff;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+    }
+
+    select[name="status"]:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Touch-friendly selects on mobile */
+    @media (max-width: 968px) {
+        select.product-select,
+        select[name="status"] {
+            font-size: 16px; /* Prevents zoom on iOS */
+            padding: 1rem;
+            min-height: 48px;
+        }
+
+        .quantity-input {
+            font-size: 16px;
+            min-height: 48px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Product data from Django
+    const products = [
+        {% for product in products %}
+        {
+            id: {{ product.id }},
+            name: "{{ product.name|escapejs }}",
+            price: parseFloat("{{ product.price }}"),
+            stock: {{ product.stock }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    let rowCounter = 0;
+
+    function addProductRow() {
+        rowCounter++;
+        const container = document.getElementById('productItems');
+
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'product-row';
+        rowDiv.id = 'row-' + rowCounter;
+
+        rowDiv.innerHTML = `
+            <div class="product-row-grid">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>اختر المنتج</label>
+                    <select name="product_id[]" class="form-control product-select" required>
+                        <option value="">-- اختر منتج --</option>
+                        ${products.map(p => `
+                            <option value="${p.id}" data-price="${p.price}">
+                                ${p.name} - ${p.price} ج.م (متوفر: ${p.stock})
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>الكمية</label>
+                    <input type="number" name="quantity[]" class="form-control quantity-input" min="1" value="1" required>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-danger" onclick="removeProductRow(${rowCounter})" style="width: 100%;">
+                        حذف
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(rowDiv);
+
+        // Add event listeners to the newly added elements
+        const newSelect = rowDiv.querySelector('.product-select');
+        const newQuantity = rowDiv.querySelector('.quantity-input');
+
+        if (newSelect) {
+            newSelect.addEventListener('change', calculateTotal);
+        }
+
+        if (newQuantity) {
+            // Use 'input' event for real-time updates as user types
+            newQuantity.addEventListener('input', calculateTotal);
+            // Also use 'change' event as fallback
+            newQuantity.addEventListener('change', calculateTotal);
+        }
+
+        calculateTotal();
+    }
+
+    function removeProductRow(rowId) {
+        const row = document.getElementById('row-' + rowId);
+        if (row) {
+            row.remove();
+            calculateTotal();
+        }
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        const productRows = document.querySelectorAll('.product-row');
+
+        productRows.forEach(row => {
+            const select = row.querySelector('.product-select');
+            const quantityInput = row.querySelector('.quantity-input');
+
+            if (select && select.value && quantityInput) {
+                const selectedOption = select.options[select.selectedIndex];
+                const price = parseFloat(selectedOption.dataset.price || 0);
+                const quantity = parseInt(quantityInput.value || 0);
+
+                if (!isNaN(price) && !isNaN(quantity) && quantity > 0) {
+                    total += price * quantity;
+                }
+            }
+        });
+
+        const totalElement = document.getElementById('totalPrice');
+        if (totalElement) {
+            totalElement.textContent = total.toFixed(2) + ' ج.م';
+        }
+    }
+
+    // Form validation
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        const productRows = document.querySelectorAll('.product-row');
+
+        if (productRows.length === 0) {
+            e.preventDefault();
+            alert('يرجى إضافة منتج واحد على الأقل');
+            return false;
+        }
+
+        let hasProduct = false;
+        const selects = document.querySelectorAll('.product-select');
+        selects.forEach(select => {
+            if (select.value) {
+                hasProduct = true;
+            }
+        });
+
+        if (!hasProduct) {
+            e.preventDefault();
+            alert('يرجى اختيار منتج واحد على الأقل');
+            return false;
+        }
+
+        return true;
+    });
+
+    // Add first product row when page loads
+    window.addEventListener('DOMContentLoaded', function() {
+        addProductRow();
+    });
+</script>
+{% endblock %}
+{% endblock %}

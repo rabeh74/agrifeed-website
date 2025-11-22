@@ -1,0 +1,127 @@
+{% extends 'store/base.html' %}
+
+{% block title %}الطلبات - Agree Feed{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><span>📋</span> قائمة الطلبات</h2>
+    <a href="{% url 'store:create_order' %}" class="btn btn-success">
+        <span>🛒</span> طلب جديد
+    </a>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card">
+    <form method="get" action="{% url 'store:order_list' %}">
+        <div class="grid grid-4">
+            <!-- Search Box -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>🔍 بحث</label>
+                <input type="text" name="search" class="form-control" placeholder="ابحث باسم العميل أو الهاتف..." value="{{ search_query }}">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>📊 الحالة</label>
+                <select name="status" class="form-control">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>جميع الحالات</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>مكتمل</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>ملغي</option>
+                </select>
+            </div>
+
+            <!-- Date Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>📅 التاريخ</label>
+                <select name="date" class="form-control">
+                    <option value="all" {% if date_filter == 'all' %}selected{% endif %}>جميع الأوقات</option>
+                    <option value="today" {% if date_filter == 'today' %}selected{% endif %}>اليوم</option>
+                    <option value="week" {% if date_filter == 'week' %}selected{% endif %}>هذا الأسبوع</option>
+                    <option value="month" {% if date_filter == 'month' %}selected{% endif %}>هذا الشهر</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn" style="width: 100%;">
+                    <span>🔍</span> تطبيق
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Orders Count -->
+{% if search_query or status_filter != 'all' or date_filter != 'all' %}
+<div class="card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-right: 4px solid #3b82f6;">
+    <p style="margin: 0; color: #1e40af; font-weight: 600;">
+        <span>ℹ️</span> تم العثور على {{ orders.count }} طلب
+        {% if search_query %} في نتائج البحث عن "{{ search_query }}"{% endif %}
+    </p>
+</div>
+{% endif %}
+
+{% if orders %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th><span>🔢</span> رقم الطلب</th>
+                <th><span>👤</span> العميل</th>
+                <th><span>📱</span> الهاتف</th>
+                <th><span>📊</span> الحالة</th>
+                <th><span>💰</span> الإجمالي</th>
+                <th><span>📅</span> التاريخ</th>
+                <th><span>⚙️</span> الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td><strong style="color: var(--primary-color);">#{{ order.id }}</strong></td>
+                <td><strong>{{ order.customer_name }}</strong></td>
+                <td style="direction: ltr; text-align: right;">{{ order.customer_phone }}</td>
+                <td>
+                    <span class="badge badge-{{ order.status }}">
+                        {% if order.status == 'completed' %}
+                            ✓ مكتمل
+                        {% else %}
+                            ✕ ملغي
+                        {% endif %}
+                    </span>
+                </td>
+                <td><span class="price">{{ order.get_total_price }} ج.م</span></td>
+                <td>{{ order.created_at|date:"Y/m/d - H:i" }}</td>
+                <td>
+                    <a href="{% url 'store:order_detail' order.id %}" class="btn btn-sm">
+                        <span>👁️</span> عرض
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card empty-state">
+    <div class="empty-state-icon">📋</div>
+    <h3>لا توجد طلبات</h3>
+    <p>
+        {% if search_query %}
+            لم يتم العثور على طلبات تطابق بحثك عن "{{ search_query }}"
+        {% else %}
+            لا توجد طلبات حالياً في النظام
+        {% endif %}
+    </p>
+    {% if search_query %}
+        <a href="{% url 'store:order_list' %}" class="btn">
+            <span>↻</span> عرض جميع الطلبات
+        </a>
+    {% else %}
+        <a href="{% url 'store:create_order' %}" class="btn btn-success">
+            <span>🛒</span> إنشاء أول طلب
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
