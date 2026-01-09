@@ -41,17 +41,21 @@
 
     // Initialize on DOM ready
     function initialize() {
-        // Target all number inputs
+        // Target ALL number and text inputs that might contain numbers
         const numberInputs = document.querySelectorAll(
-            'input[type="number"], input[type="tel"], input[name*="phone"], input[name*="quantity"], input[name*="price"], input[name*="paid"]'
+            'input[type="number"], input[type="tel"], input[type="text"]'
         );
 
         numberInputs.forEach(input => {
+            // Add event listeners
             input.addEventListener('input', handleNumberInput);
             input.addEventListener('keyup', handleNumberInput);
             input.addEventListener('paste', function(e) {
                 setTimeout(() => handleNumberInput(e), 10);
             });
+            
+            // Mark as initialized to avoid duplicate listeners
+            input.dataset.arabicConverterInitialized = 'true';
         });
 
         console.log(`Arabic number converter initialized for ${numberInputs.length} inputs`);
@@ -69,16 +73,32 @@
         mutations.forEach(function(mutation) {
             mutation.addedNodes.forEach(function(node) {
                 if (node.nodeType === 1) { // Element node
+                    // Check if the node itself is an input
+                    if (node.tagName === 'INPUT' && 
+                        (node.type === 'number' || node.type === 'tel' || node.type === 'text') &&
+                        !node.dataset.arabicConverterInitialized) {
+                        node.addEventListener('input', handleNumberInput);
+                        node.addEventListener('keyup', handleNumberInput);
+                        node.addEventListener('paste', function(e) {
+                            setTimeout(() => handleNumberInput(e), 10);
+                        });
+                        node.dataset.arabicConverterInitialized = 'true';
+                    }
+                    
+                    // Check for inputs within the added node
                     const inputs = node.querySelectorAll 
-                        ? node.querySelectorAll('input[type="number"], input[type="tel"], input[name*="phone"], input[name*="quantity"], input[name*="price"], input[name*="paid"]')
+                        ? node.querySelectorAll('input[type="number"], input[type="tel"], input[type="text"]')
                         : [];
                     
                     inputs.forEach(input => {
-                        input.addEventListener('input', handleNumberInput);
-                        input.addEventListener('keyup', handleNumberInput);
-                        input.addEventListener('paste', function(e) {
-                            setTimeout(() => handleNumberInput(e), 10);
-                        });
+                        if (!input.dataset.arabicConverterInitialized) {
+                            input.addEventListener('input', handleNumberInput);
+                            input.addEventListener('keyup', handleNumberInput);
+                            input.addEventListener('paste', function(e) {
+                                setTimeout(() => handleNumberInput(e), 10);
+                            });
+                            input.dataset.arabicConverterInitialized = 'true';
+                        }
                     });
                 }
             });
