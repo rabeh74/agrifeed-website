@@ -378,7 +378,7 @@ def edit_order(request, order_id):
         if form.is_valid():
             order = form.save()
             messages.success(request, f'تم تحديث الطلب #{order.id} بنجاح!')
-            return redirect('order_detail', order_id=order.id)
+            return redirect('store:order_detail', order_id=order.id)
         else:
             messages.error(request, 'يرجى تصحيح الأخطاء في النموذج.')
     else:
