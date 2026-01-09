@@ -301,9 +301,11 @@ def create_order(request):
         form = OrderForm()
 
     products = Product.objects.filter(stock__gt=0)
+    customers = Customer.objects.all().order_by('full_name')
     context = {
         'form': form,
-        'products': products
+        'products': products,
+        'customers': customers
     }
     return render(request, 'store/create_order.html', context)
 
@@ -465,8 +467,26 @@ def customer_create(request):
         if form.is_valid():
             customer = form.save()
             messages.success(request, f'تم إضافة العميل "{customer.full_name}" بنجاح!')
+            
+            # If it's an AJAX request, return success
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                from django.http import JsonResponse
+                return JsonResponse({
+                    'success': True,
+                    'customer_id': customer.id,
+                    'customer_name': customer.full_name,
+                    'customer_phone': customer.phone_number or ''
+                })
+            
             return redirect('store:customer_list')
         else:
+            # If AJAX, return errors
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                from django.http import JsonResponse
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors
+                }, status=400)
             messages.error(request, 'يرجى تصحيح الأخطاء في النموذج.')
     else:
         form = CustomerForm()

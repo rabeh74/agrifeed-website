@@ -17,27 +17,59 @@
 
         <div class="form-group">
             <label>العميل *</label>
-            {{ form.customer }}
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <div style="flex: 1; position: relative;">
+                    <input type="text" id="customerSearch" class="form-control" placeholder="ابحث عن عميل..." autocomplete="off" style="margin-bottom: 5px;">
+                    <select name="customer" id="customerSelect" class="form-control" required style="display: none;">
+                        <option value="">-- اختر عميل --</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}" data-name="{{ customer.full_name }}" data-phone="{{ customer.phone_number|default:'' }}">
+                            {{ customer.full_name }}{% if customer.phone_number %} - {{ customer.phone_number }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div id="customerSearchResults" style="display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; width: 100%; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                    <div id="selectedCustomerDisplay" style="display: none; background: #f0f4ff; padding: 12px; border-radius: 4px; margin-top: 5px; border: 2px solid #667eea;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong id="selectedCustomerName" style="color: #2c3e50; font-size: 16px;"></strong>
+                                <div id="selectedCustomerPhone" style="color: #666; font-size: 13px; margin-top: 3px;"></div>
+                            </div>
+                            <button type="button" onclick="clearCustomerSelection()" style="background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 0 5px;" title="مسح الاختيار">×</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="showNewCustomerForm()" class="btn btn-success" style="white-space: nowrap;">
+                    + عميل جديد
+                </button>
+            </div>
             {% if form.customer.errors %}
                 <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
                     {{ form.customer.errors|first }}
                 </div>
             {% endif %}
-            <div style="color: #666; font-size: 12px; margin-top: 5px;">
-                إذا كان العميل غير موجود، يمكنك <a href="{% url 'store:customer_create' %}" target="_blank" style="color: #667eea;">إضافة عميل جديد</a>
-            </div>
         </div>
 
-        <div class="form-group">
-            <label>المبلغ المدفوع *</label>
-            {{ form.paid_amount }}
-            {% if form.paid_amount.errors %}
-                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
-                    {{ form.paid_amount.errors|first }}
-                </div>
-            {% endif %}
-            <div style="color: #666; font-size: 12px; margin-top: 5px;">
-                أدخل المبلغ الذي دفعه العميل. يمكنك تركه 0 إذا لم يدفع بعد.
+        <!-- Inline Customer Creation Form -->
+        <div id="newCustomerForm" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #667eea;">
+            <h4 style="margin-bottom: 15px; color: #667eea;">إضافة عميل جديد</h4>
+            <div class="form-group">
+                <label>الاسم الكامل *</label>
+                <input type="text" id="newCustomerName" class="form-control" placeholder="اسم العميل الكامل">
+                <div id="newCustomerNameError" style="color: #e74c3c; font-size: 13px; margin-top: 5px; display: none;"></div>
+            </div>
+            <div class="form-group">
+                <label>رقم الهاتف (اختياري)</label>
+                <input type="text" id="newCustomerPhone" class="form-control" placeholder="رقم الهاتف">
+                <div id="newCustomerPhoneError" style="color: #e74c3c; font-size: 13px; margin-top: 5px; display: none;"></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="saveNewCustomer()" class="btn btn-success" style="flex: 1;">
+                    حفظ العميل
+                </button>
+                <button type="button" onclick="hideNewCustomerForm()" class="btn" style="flex: 1;">
+                    إلغاء
+                </button>
             </div>
         </div>
 
@@ -77,9 +109,28 @@
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
 
         <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0;">الإجمالي:</h3>
                 <h2 id="totalPrice" class="price" style="margin: 0;">0.00 ج.م</h2>
+            </div>
+            
+            <div class="form-group" style="margin: 0;">
+                <label>المبلغ المدفوع *</label>
+                {{ form.paid_amount }}
+                {% if form.paid_amount.errors %}
+                    <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                        {{ form.paid_amount.errors|first }}
+                    </div>
+                {% endif %}
+                <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                    أدخل المبلغ الذي دفعه العميل. يمكنك تركه 0 إذا لم يدفع بعد.
+                </div>
+                <div id="remainingAmount" style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #666;">المبلغ المتبقي:</span>
+                        <span id="remainingAmountValue" class="price" style="font-weight: 700; font-size: 18px;"></span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -182,6 +233,175 @@
 
 {% block extra_js %}
 <script>
+    // Customer search and management
+    const customerSearch = document.getElementById('customerSearch');
+    const customerSelect = document.getElementById('customerSelect');
+    const customerSearchResults = document.getElementById('customerSearchResults');
+    const selectedCustomerDisplay = document.getElementById('selectedCustomerDisplay');
+    const paidAmountInput = document.querySelector('input[name="paid_amount"]');
+
+    // Customer search functionality
+    customerSearch.addEventListener('input', function() {
+        const searchTerm = this.value.trim().toLowerCase();
+        
+        if (searchTerm.length === 0) {
+            customerSearchResults.style.display = 'none';
+            return;
+        }
+
+        const options = Array.from(customerSelect.options).slice(1); // Skip first empty option
+        const matches = options.filter(option => {
+            const name = option.dataset.name.toLowerCase();
+            const phone = option.dataset.phone.toLowerCase();
+            return name.includes(searchTerm) || phone.includes(searchTerm);
+        });
+
+        if (matches.length > 0) {
+            customerSearchResults.innerHTML = matches.map(option => `
+                <div class="customer-search-item" onclick="selectCustomer(${option.value}, '${option.dataset.name}', '${option.dataset.phone}')" 
+                     style="padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s;">
+                    <strong style="display: block; color: #2c3e50;">${option.dataset.name}</strong>
+                    ${option.dataset.phone ? `<span style="color: #666; font-size: 13px;">${option.dataset.phone}</span>` : ''}
+                </div>
+            `).join('');
+            customerSearchResults.style.display = 'block';
+        } else {
+            customerSearchResults.innerHTML = '<div style="padding: 12px; color: #666;">لا توجد نتائج</div>';
+            customerSearchResults.style.display = 'block';
+        }
+    });
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!customerSearch.contains(e.target) && !customerSearchResults.contains(e.target)) {
+            customerSearchResults.style.display = 'none';
+        }
+    });
+
+    // Hover effect for search items
+    document.addEventListener('mouseover', function(e) {
+        if (e.target.closest('.customer-search-item')) {
+            e.target.closest('.customer-search-item').style.background = '#f0f4ff';
+        }
+    });
+    document.addEventListener('mouseout', function(e) {
+        if (e.target.closest('.customer-search-item')) {
+            e.target.closest('.customer-search-item').style.background = 'white';
+        }
+    });
+
+    function selectCustomer(id, name, phone) {
+        customerSelect.value = id;
+        customerSearch.value = '';
+        customerSearchResults.style.display = 'none';
+        customerSearch.style.display = 'none';
+        
+        document.getElementById('selectedCustomerName').textContent = name;
+        document.getElementById('selectedCustomerPhone').textContent = phone || 'لا يوجد رقم هاتف';
+        selectedCustomerDisplay.style.display = 'block';
+    }
+
+    function clearCustomerSelection() {
+        customerSelect.value = '';
+        customerSearch.value = '';
+        customerSearch.style.display = 'block';
+        selectedCustomerDisplay.style.display = 'none';
+    }
+
+    // New customer form
+    function showNewCustomerForm() {
+        document.getElementById('newCustomerForm').style.display = 'block';
+        document.getElementById('newCustomerName').focus();
+    }
+
+    function hideNewCustomerForm() {
+        document.getElementById('newCustomerForm').style.display = 'none';
+        document.getElementById('newCustomerName').value = '';
+        document.getElementById('newCustomerPhone').value = '';
+        document.getElementById('newCustomerNameError').style.display = 'none';
+        document.getElementById('newCustomerPhoneError').style.display = 'none';
+    }
+
+    async function saveNewCustomer() {
+        const name = document.getElementById('newCustomerName').value.trim();
+        const phone = document.getElementById('newCustomerPhone').value.trim();
+        const nameError = document.getElementById('newCustomerNameError');
+        const phoneError = document.getElementById('newCustomerPhoneError');
+        
+        // Reset errors
+        nameError.style.display = 'none';
+        phoneError.style.display = 'none';
+
+        // Validate
+        if (!name || name.length < 3) {
+            nameError.textContent = 'الاسم مطلوب ويجب أن يكون 3 أحرف على الأقل';
+            nameError.style.display = 'block';
+            return;
+        }
+
+        // Send AJAX request to create customer
+        try {
+            const response = await fetch('{% url "store:customer_create" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: new URLSearchParams({
+                    'full_name': name,
+                    'phone_number': phone
+                })
+            });
+
+            if (response.ok) {
+                const html = await response.text();
+                
+                // Check if it's a redirect (success)
+                if (response.redirected || response.url.includes('customer_list')) {
+                    // Customer created successfully, reload to get updated customer list
+                    alert('تم إضافة العميل بنجاح! جاري تحديث القائمة...');
+                    window.location.reload();
+                } else {
+                    // Check for validation errors in the response
+                    if (html.includes('الاسم الكامل') && html.includes('already exists')) {
+                        nameError.textContent = 'هذا الاسم موجود بالفعل';
+                        nameError.style.display = 'block';
+                    } else {
+                        nameError.textContent = 'حدث خطأ أثناء الحفظ';
+                        nameError.style.display = 'block';
+                    }
+                }
+            } else {
+                nameError.textContent = 'حدث خطأ أثناء الحفظ';
+                nameError.style.display = 'block';
+            }
+        } catch (error) {
+            nameError.textContent = 'حدث خطأ في الاتصال';
+            nameError.style.display = 'block';
+        }
+    }
+
+    // Calculate remaining amount
+    function updateRemainingAmount() {
+        const total = parseFloat(document.getElementById('totalPrice').textContent.replace(' ج.م', '')) || 0;
+        const paid = parseFloat(paidAmountInput.value) || 0;
+        const remaining = total - paid;
+
+        if (total > 0) {
+            document.getElementById('remainingAmount').style.display = 'block';
+            const remainingDisplay = document.getElementById('remainingAmountValue');
+            remainingDisplay.textContent = remaining.toFixed(2) + ' ج.م';
+            remainingDisplay.style.color = remaining > 0 ? '#e74c3c' : '#10b981';
+        } else {
+            document.getElementById('remainingAmount').style.display = 'none';
+        }
+    }
+
+    // Update remaining amount when paid amount or total changes
+    if (paidAmountInput) {
+        paidAmountInput.addEventListener('input', updateRemainingAmount);
+    }
+
     // Product data from Django
     const products = [
         {% for product in products %}
@@ -280,6 +500,9 @@
         if (totalElement) {
             totalElement.textContent = total.toFixed(2) + ' ج.م';
         }
+        
+        // Update remaining amount
+        updateRemainingAmount();
     }
 
     // Form validation
