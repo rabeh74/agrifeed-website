@@ -32,10 +32,15 @@ class CustomerForm(forms.ModelForm):
 
     def clean_phone_number(self):
         """Validate customer phone if provided"""
-        phone = self.cleaned_data.get('phone_number', '').strip()
+        phone = self.cleaned_data.get('phone_number')
         
+        # Handle None or empty string
         if not phone:
-            return ''
+            return None
+        
+        phone = phone.strip()
+        if not phone:
+            return None
 
         # Remove spaces and dashes
         phone_digits = re.sub(r'[\s\-\(\)]', '', phone)
