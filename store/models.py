@@ -2,6 +2,26 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 
+
+class Customer(models.Model):
+    full_name = models.CharField(max_length=200, unique=True, verbose_name='الاسم الكامل')
+    phone_number = models.CharField(max_length=20, blank=True, null=True, verbose_name='رقم الهاتف')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الإضافة')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='تاريخ التحديث')
+
+    class Meta:
+        verbose_name = 'عميل'
+        verbose_name_plural = 'العملاء'
+        ordering = ['full_name']
+
+    def __str__(self):
+        return self.full_name
+
+    def get_total_debt(self):
+        """Calculate total remaining money across all orders"""
+        return sum(order.get_remaining_amount() for order in self.orders.all())
+
+
 class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name='اسم المنتج')
     description = models.TextField(verbose_name='الوصف')
@@ -47,14 +67,24 @@ class Order(models.Model):
         ('cancelled', 'ملغي'),
     ]
 
-    customer_name = models.CharField(max_length=200, verbose_name='اسم العميل')
-    customer_email = models.EmailField(verbose_name='البريد الإلكتروني')
-    customer_phone = models.CharField(max_length=20, verbose_name='رقم الهاتف')
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.PROTECT,
+        related_name='orders',
+        verbose_name='العميل'
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default='completed',
         verbose_name='الحالة'
+    )
+    paid_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        verbose_name='المبلغ المدفوع'
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاريخ الطلب')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاريخ التحديث')
@@ -66,10 +96,20 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'طلب #{self.id} - {self.customer_name}'
+        return f'طلب #{self.id} - {self.customer.full_name}'
 
     def get_total_price(self):
+        """Calculate total order price from items"""
         return sum(item.get_total_price() for item in self.items.all())
+
+    def get_remaining_amount(self):
+        """Calculate remaining unpaid amount"""
+        total = self.get_total_price()
+        return max(total - self.paid_amount, Decimal('0.00'))
+
+    def is_fully_paid(self):
+        """Check if order is fully paid"""
+        return self.get_remaining_amount() == Decimal('0.00')
 
 
 class OrderItem(models.Model):

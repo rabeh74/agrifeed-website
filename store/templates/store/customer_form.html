@@ -1,0 +1,58 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{% if action == 'add' %}إضافة عميل جديد{% else %}تعديل بيانات العميل{% endif %} - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% if action == 'edit' %}{% url 'store:customer_detail' customer.id %}{% else %}{% url 'store:customer_list' %}{% endif %}" class="btn">← العودة</a>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="margin-bottom: 25px; color: #2c3e50;">
+        {% if action == 'add' %}
+            <span>➕</span> إضافة عميل جديد
+        {% else %}
+            <span>✏️</span> تعديل بيانات العميل
+        {% endif %}
+    </h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>الاسم الكامل *</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.full_name.errors|first }}
+                </div>
+            {% endif %}
+            <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                يجب أن يكون الاسم فريداً لكل عميل
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>رقم الهاتف (اختياري)</label>
+            {{ form.phone_number }}
+            {% if form.phone_number.errors %}
+                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
+                    {{ form.phone_number.errors|first }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button type="submit" class="btn btn-success" style="flex: 1;">
+                {% if action == 'add' %}
+                    <span>➕</span> إضافة العميل
+                {% else %}
+                    <span>💾</span> حفظ التعديلات
+                {% endif %}
+            </button>
+            <a href="{% if action == 'edit' %}{% url 'store:customer_detail' customer.id %}{% else %}{% url 'store:customer_list' %}{% endif %}" class="btn" style="flex: 1; text-align: center; line-height: 38px;">إلغاء</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

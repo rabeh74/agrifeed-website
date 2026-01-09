@@ -40,22 +40,38 @@
 
             <div class="info-row">
                 <span class="info-label">الاسم:</span>
-                <span class="info-value"><strong>{{ order.customer_name }}</strong></span>
+                <span class="info-value"><strong>{{ order.customer.full_name }}</strong></span>
             </div>
 
-            <div class="info-row">
-                <span class="info-label">البريد:</span>
-                <span class="info-value">{{ order.customer_email }}</span>
-            </div>
-
+            {% if order.customer.phone_number %}
             <div class="info-row">
                 <span class="info-label">الهاتف:</span>
-                <span class="info-value" style="direction: ltr; text-align: left;">{{ order.customer_phone }}</span>
+                <span class="info-value" style="direction: ltr; text-align: left;">{{ order.customer.phone_number }}</span>
             </div>
+            {% endif %}
 
             <div class="info-row">
                 <span class="info-label">التاريخ:</span>
                 <span class="info-value">{{ order.created_at|date:"Y/m/d - H:i" }}</span>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-100);">
+                <h4 style="font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>💰</span> معلومات الدفع
+                </h4>
+                <div class="info-row">
+                    <span class="info-label">المبلغ المدفوع:</span>
+                    <span class="info-value" style="color: var(--success-color); font-weight: 600;">{{ order.paid_amount }} ج.م</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">المبلغ المتبقي:</span>
+                    <span class="info-value" style="color: {% if order.is_fully_paid %}var(--success-color){% else %}var(--danger-color){% endif %}; font-weight: 700; font-size: 1.1rem;">
+                        {{ order.get_remaining_amount }} ج.م
+                        {% if order.is_fully_paid %}
+                            <span style="font-size: 0.9rem;">✓</span>
+                        {% endif %}
+                    </span>
+                </div>
             </div>
 
             {% if order.notes %}

@@ -1,0 +1,122 @@
+{% extends 'store/base.html' %}
+
+{% block title %}إضافة إدخال منتج - Agree Feed{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📥</span>
+        <span>إضافة إدخال منتج</span>
+    </h2>
+    <a href="{% url 'store:product_entry_list' %}" class="btn btn-secondary">
+        <span>←</span> العودة للقائمة
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">معلومات الإدخال</h3>
+    </div>
+
+    <form method="post" action="{% url 'store:add_product_entry' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.product.id_for_label }}">المنتج <span style="color: var(--danger-color);">*</span></label>
+            {{ form.product }}
+            {% if form.product.errors %}
+            <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">
+                {{ form.product.errors }}
+            </div>
+            {% endif %}
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                اختر المنتج الذي تريد إضافة كمية له
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.entry_type.id_for_label }}">نوع العملية <span style="color: var(--danger-color);">*</span></label>
+            {{ form.entry_type }}
+            {% if form.entry_type.errors %}
+            <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">
+                {{ form.entry_type.errors }}
+            </div>
+            {% endif %}
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                شراء: شراء منتجات جديدة | مرتجع: إرجاع منتجات من عميل | تعديل: تعديل المخزون
+            </small>
+        </div>
+
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label for="{{ form.quantity.id_for_label }}">الكمية <span style="color: var(--danger-color);">*</span></label>
+                {{ form.quantity }}
+                {% if form.quantity.errors %}
+                <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">
+                    {{ form.quantity.errors }}
+                </div>
+                {% endif %}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                    عدد الوحدات المضافة
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.purchase_price.id_for_label }}">سعر الشراء (للوحدة) <span style="color: var(--danger-color);">*</span></label>
+                {{ form.purchase_price }}
+                {% if form.purchase_price.errors %}
+                <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">
+                    {{ form.purchase_price.errors }}
+                </div>
+                {% endif %}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                    السعر الذي تم شراء كل وحدة به بالجنيه المصري
+                </small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">ملاحظات</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+            <div style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">
+                {{ form.notes.errors }}
+            </div>
+            {% endif %}
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                أي ملاحظات إضافية عن هذا الإدخال (اختياري)
+            </small>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; margin-top: 1.5rem;">
+            <p style="margin: 0; color: var(--info-color); font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                <span>ℹ️</span>
+                <span>سيتم إضافة الكمية تلقائياً إلى مخزون المنتج عند الحفظ</span>
+            </p>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+            <button type="submit" class="btn btn-success">
+                <span>✓</span> حفظ الإدخال
+            </button>
+            <a href="{% url 'store:product_entry_list' %}" class="btn btn-secondary">
+                <span>✕</span> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24;">
+    <h4 style="margin: 0 0 1rem 0; color: var(--warning-color); font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+        <span>💡</span>
+        <span>نصائح مهمة</span>
+    </h4>
+    <ul style="margin: 0; padding-right: 1.5rem; color: var(--gray-700);">
+        <li>سعر الشراء هو السعر الذي دفعته لشراء المنتج، وليس سعر البيع للعميل</li>
+        <li>سيتم حساب التكلفة الإجمالية تلقائياً (الكمية × سعر الشراء)</li>
+        <li>يمكنك تتبع جميع الإدخالات السابقة من صفحة "إدخالات المنتجات"</li>
+        <li>إذا كان نفس المنتج يُشترى بأسعار مختلفة، سيتم حفظ كل عملية شراء بشكل منفصل</li>
+    </ul>
+</div>
+
+{% endblock %}

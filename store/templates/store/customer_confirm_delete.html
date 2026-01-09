@@ -1,0 +1,46 @@
+{% extends 'store/base.html' %}
+
+{% block title %}حذف العميل - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'store:customer_detail' customer.id %}" class="btn">← العودة</a>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="margin-bottom: 25px; color: #e74c3c; display: flex; align-items: center; gap: 10px;">
+        <span>⚠️</span> تأكيد حذف العميل
+    </h2>
+
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #856404; font-weight: 500;">
+            هل أنت متأكد من حذف العميل التالي؟ هذا الإجراء لا يمكن التراجع عنه.
+        </p>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin-bottom: 25px;">
+        <div class="info-row">
+            <span class="info-label">الاسم الكامل:</span>
+            <span class="info-value"><strong>{{ customer.full_name }}</strong></span>
+        </div>
+        
+        {% if customer.phone_number %}
+        <div class="info-row">
+            <span class="info-label">رقم الهاتف:</span>
+            <span class="info-value">{{ customer.phone_number }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <form method="post" style="display: flex; gap: 10px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" style="flex: 1;">
+            <span>🗑️</span> نعم، احذف العميل
+        </button>
+        <a href="{% url 'store:customer_detail' customer.id %}" class="btn" style="flex: 1; text-align: center; line-height: 38px;">
+            إلغاء
+        </a>
+    </form>
+</div>
+{% endblock %}
+

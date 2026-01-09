@@ -1,27 +1,66 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Order, OrderItem, Product
+from .models import Order, OrderItem, Product, Customer
 import re
+
+
+class CustomerForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ['full_name', 'phone_number']
+        widgets = {
+            'full_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'الاسم الكامل',
+                'required': True
+            }),
+            'phone_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'رقم الهاتف (اختياري)',
+                'required': False
+            })
+        }
+
+    def clean_full_name(self):
+        """Validate customer name"""
+        name = self.cleaned_data.get('full_name', '').strip()
+        if not name:
+            raise ValidationError('الاسم الكامل مطلوب.')
+        if len(name) < 3:
+            raise ValidationError('الاسم يجب أن يكون على الأقل 3 أحرف.')
+        return name
+
+    def clean_phone_number(self):
+        """Validate customer phone if provided"""
+        phone = self.cleaned_data.get('phone_number', '').strip()
+        
+        if not phone:
+            return ''
+
+        # Remove spaces and dashes
+        phone_digits = re.sub(r'[\s\-\(\)]', '', phone)
+
+        # Check if it contains only digits and possibly a leading +
+        if not re.match(r'^\+?\d{10,15}$', phone_digits):
+            raise ValidationError('رقم الهاتف غير صحيح. يجب أن يحتوي على 10-15 رقم.')
+
+        return phone
 
 
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['customer_name', 'customer_email', 'customer_phone', 'notes', 'status']
+        fields = ['customer', 'paid_amount', 'notes', 'status']
         widgets = {
-            'customer_name': forms.TextInput(attrs={
+            'customer': forms.Select(attrs={
                 'class': 'form-control',
-                'placeholder': 'اسم العميل',
                 'required': True
             }),
-            'customer_email': forms.EmailInput(attrs={
+            'paid_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'البريد الإلكتروني',
-                'required': True
-            }),
-            'customer_phone': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'رقم الهاتف',
+                'placeholder': 'المبلغ المدفوع',
+                'step': '0.01',
+                'min': '0.00',
                 'required': True
             }),
             'notes': forms.Textarea(attrs={
@@ -34,36 +73,14 @@ class OrderForm(forms.ModelForm):
             })
         }
 
-    def clean_customer_name(self):
-        """Validate customer name"""
-        name = self.cleaned_data.get('customer_name', '').strip()
-        if not name:
-            raise ValidationError('اسم العميل مطلوب.')
-        if len(name) < 3:
-            raise ValidationError('اسم العميل يجب أن يكون على الأقل 3 أحرف.')
-        return name
-
-    def clean_customer_phone(self):
-        """Validate customer phone"""
-        phone = self.cleaned_data.get('customer_phone', '').strip()
-        if not phone:
-            raise ValidationError('رقم الهاتف مطلوب.')
-
-        # Remove spaces and dashes
-        phone_digits = re.sub(r'[\s\-\(\)]', '', phone)
-
-        # Check if it contains only digits and possibly a leading +
-        if not re.match(r'^\+?\d{10,15}$', phone_digits):
-            raise ValidationError('رقم الهاتف غير صحيح. يجب أن يحتوي على 10-15 رقم.')
-
-        return phone
-
-    def clean_customer_email(self):
-        """Validate customer email"""
-        email = self.cleaned_data.get('customer_email', '').strip().lower()
-        if not email:
-            raise ValidationError('البريد الإلكتروني مطلوب.')
-        return email
+    def clean_paid_amount(self):
+        """Validate paid amount"""
+        paid_amount = self.cleaned_data.get('paid_amount')
+        if paid_amount is None:
+            raise ValidationError('المبلغ المدفوع مطلوب.')
+        if paid_amount < 0:
+            raise ValidationError('المبلغ المدفوع لا يمكن أن يكون سالباً.')
+        return paid_amount
 
 
 class ProductForm(forms.ModelForm):

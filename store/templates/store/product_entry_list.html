@@ -1,0 +1,177 @@
+{% extends 'store/base.html' %}
+
+{% block title %}إدخالات المنتجات - Agree Feed{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>
+        <span>📥</span>
+        <span>إدخالات المنتجات</span>
+    </h2>
+    <a href="{% url 'store:add_product_entry' %}" class="btn btn-success">
+        <span>➕</span> إضافة إدخال جديد
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-3 mb-3">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="text-secondary mb-2" style="font-size: 0.95rem; font-weight: 600;">إجمالي الإدخالات</h5>
+            <p class="price" style="font-size: 2rem; margin: 0;">{{ total_entries }}</p>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0.5rem 0 0 0;">{{ filter_label }}</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="text-secondary mb-2" style="font-size: 0.95rem; font-weight: 600;">إجمالي الكمية</h5>
+            <p class="price" style="font-size: 2rem; margin: 0;">{{ total_quantity }}</p>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0.5rem 0 0 0;">وحدة</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="text-secondary mb-2" style="font-size: 0.95rem; font-weight: 600;">إجمالي الإنفاق</h5>
+            <p class="price" style="font-size: 2rem; margin: 0;">{{ total_spent|floatformat:2 }}</p>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0.5rem 0 0 0;">جنيه</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-header">
+        <h3 class="card-title" style="font-size: 1.25rem;">🔍 تصفية وبحث</h3>
+    </div>
+    <form method="get" action="{% url 'store:product_entry_list' %}">
+        <div class="grid grid-2 mb-3">
+            <div class="form-group">
+                <label for="search">البحث بالمنتج:</label>
+                <input type="text" id="search" name="search" class="form-control" placeholder="ابحث عن منتج..." value="{{ search_query }}">
+            </div>
+            <div class="form-group">
+                <label for="product">تصفية بالمنتج:</label>
+                <select id="product" name="product" class="form-control">
+                    <option value="">جميع المنتجات</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" {% if selected_product == product.id|stringformat:"s" %}selected{% endif %}>
+                        {{ product.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-3 mb-3">
+            <div class="form-group">
+                <label for="entry_type">نوع العملية:</label>
+                <select id="entry_type" name="entry_type" class="form-control">
+                    <option value="all" {% if entry_type == 'all' %}selected{% endif %}>جميع الأنواع</option>
+                    <option value="purchase" {% if entry_type == 'purchase' %}selected{% endif %}>شراء</option>
+                    <option value="return" {% if entry_type == 'return' %}selected{% endif %}>مرتجع</option>
+                    <option value="adjustment" {% if entry_type == 'adjustment' %}selected{% endif %}>تعديل</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">تصفية بالتاريخ:</label>
+                <select id="date" name="date" class="form-control">
+                    <option value="all" {% if date_filter == 'all' %}selected{% endif %}>كل الأوقات</option>
+                    <option value="today" {% if date_filter == 'today' %}selected{% endif %}>اليوم</option>
+                    <option value="week" {% if date_filter == 'week' %}selected{% endif %}>هذا الأسبوع</option>
+                    <option value="month" {% if date_filter == 'month' %}selected{% endif %}>هذا الشهر</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sort">ترتيب:</label>
+                <select id="sort" name="sort" class="form-control">
+                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>الأحدث أولاً</option>
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>الأقدم أولاً</option>
+                    <option value="product__name" {% if sort_by == 'product__name' %}selected{% endif %}>المنتج (أ-ي)</option>
+                    <option value="-product__name" {% if sort_by == '-product__name' %}selected{% endif %}>المنتج (ي-أ)</option>
+                    <option value="-quantity" {% if sort_by == '-quantity' %}selected{% endif %}>الكمية (الأكبر)</option>
+                    <option value="quantity" {% if sort_by == 'quantity' %}selected{% endif %}>الكمية (الأصغر)</option>
+                    <option value="-purchase_price" {% if sort_by == '-purchase_price' %}selected{% endif %}>السعر (الأعلى)</option>
+                    <option value="purchase_price" {% if sort_by == 'purchase_price' %}selected{% endif %}>السعر (الأقل)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-2 mb-3">
+            <div class="form-group">
+                <label for="start_date">من تاريخ:</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="form-group">
+                <label for="end_date">إلى تاريخ:</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit" class="btn btn-success">
+                <span>🔍</span> بحث
+            </button>
+            <a href="{% url 'store:product_entry_list' %}" class="btn btn-secondary">
+                <span>✕</span> إعادة تعيين
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Entries Table -->
+{% if entries_with_totals %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>المنتج</th>
+                <th>نوع العملية</th>
+                <th>الكمية</th>
+                <th>سعر الشراء (للوحدة)</th>
+                <th>التكلفة الإجمالية</th>
+                <th>التاريخ</th>
+                <th>ملاحظات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in entries_with_totals %}
+            <tr>
+                <td style="font-weight: 600;">{{ item.entry.product.name }}</td>
+                <td>
+                    {% if item.entry.entry_type == 'purchase' %}
+                    <span class="badge badge-completed">شراء</span>
+                    {% elif item.entry.entry_type == 'return' %}
+                    <span class="badge badge-processing">مرتجع</span>
+                    {% elif item.entry.entry_type == 'adjustment' %}
+                    <span class="badge badge-pending">تعديل</span>
+                    {% endif %}
+                </td>
+                <td style="font-weight: 600; color: var(--info-color);">{{ item.entry.quantity }} وحدة</td>
+                <td class="price" style="font-size: 1rem;">{{ item.entry.purchase_price|floatformat:2 }} جنيه</td>
+                <td class="price">{{ item.total_cost|floatformat:2 }} جنيه</td>
+                <td style="color: var(--text-secondary); font-size: 0.875rem;">
+                    {{ item.entry.created_at|date:"Y-m-d" }}<br>
+                    <small>{{ item.entry.created_at|date:"H:i" }}</small>
+                </td>
+                <td style="color: var(--text-secondary); font-size: 0.875rem;">
+                    {{ item.entry.notes|default:"—" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-state-icon">📥</div>
+        <h3>لا توجد إدخالات</h3>
+        <p>لم يتم العثور على إدخالات منتجات بالمعايير المحددة</p>
+        <a href="{% url 'store:add_product_entry' %}" class="btn btn-success">
+            <span>➕</span> إضافة إدخال جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

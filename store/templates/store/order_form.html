@@ -18,33 +18,26 @@
         {% csrf_token %}
 
         <div class="form-group">
-            <label>{{ form.customer_name.label }} *</label>
-            {{ form.customer_name }}
-            {% if form.customer_name.errors %}
+            <label>{{ form.customer.label }} *</label>
+            {{ form.customer }}
+            {% if form.customer.errors %}
                 <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
-                    {{ form.customer_name.errors|first }}
+                    {{ form.customer.errors|first }}
                 </div>
             {% endif %}
         </div>
 
         <div class="form-group">
-            <label>{{ form.customer_email.label }} *</label>
-            {{ form.customer_email }}
-            {% if form.customer_email.errors %}
+            <label>{{ form.paid_amount.label }} *</label>
+            {{ form.paid_amount }}
+            {% if form.paid_amount.errors %}
                 <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
-                    {{ form.customer_email.errors|first }}
+                    {{ form.paid_amount.errors|first }}
                 </div>
             {% endif %}
-        </div>
-
-        <div class="form-group">
-            <label>{{ form.customer_phone.label }} *</label>
-            {{ form.customer_phone }}
-            {% if form.customer_phone.errors %}
-                <div style="color: #e74c3c; font-size: 13px; margin-top: 5px;">
-                    {{ form.customer_phone.errors|first }}
-                </div>
-            {% endif %}
+            <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                المبلغ الذي دفعه العميل حتى الآن
+            </div>
         </div>
 
         <div class="form-group">

@@ -751,6 +751,9 @@
                 <li><a href="{% url 'store:create_order' %}" {% if request.resolver_match.url_name == 'create_order' %}class="active"{% endif %}>
                     <span>🛒</span> طلب جديد
                 </a></li>
+                <li><a href="{% url 'store:customer_list' %}" {% if request.resolver_match.url_name == 'customer_list' %}class="active"{% endif %}>
+                    <span>👥</span> العملاء
+                </a></li>
             </ul>
         </div>
     </nav>

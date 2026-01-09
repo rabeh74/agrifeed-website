@@ -5,8 +5,8 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from decimal import Decimal
-from .models import Product, Order, OrderItem
-from .forms import OrderForm, ProductForm
+from .models import Product, Order, OrderItem, Customer
+from .forms import OrderForm, ProductForm, CustomerForm
 
 
 @login_required
@@ -121,12 +121,12 @@ def product_list(request):
 @login_required
 def order_list(request):
     """Order list with search and filter"""
-    orders = Order.objects.all()
+    orders = Order.objects.select_related('customer').all()
 
     # Search functionality
     search_query = request.GET.get('search', '').strip()
     if search_query:
-        orders = orders.filter(customer_name__icontains=search_query) | orders.filter(customer_phone__icontains=search_query)
+        orders = orders.filter(customer__full_name__icontains=search_query) | orders.filter(customer__phone_number__icontains=search_query)
 
     # Status filter
     status_filter = request.GET.get('status', 'all')
@@ -152,7 +152,7 @@ def order_list(request):
 
     # Sort
     sort_by = request.GET.get('sort', '-created_at')
-    valid_sorts = ['-created_at', 'created_at', 'customer_name', '-customer_name']
+    valid_sorts = ['-created_at', 'created_at', 'customer__full_name', '-customer__full_name']
     if sort_by in valid_sorts:
         orders = orders.order_by(sort_by)
 
@@ -411,3 +411,106 @@ def delete_order(request, order_id):
         'order': order,
         'total_price': total_price
     })
+
+
+# ================== CUSTOMER MANAGEMENT ==================
+
+@login_required
+def customer_list(request):
+    """Customer list with search"""
+    customers = Customer.objects.all()
+
+    # Search functionality
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        customers = customers.filter(full_name__icontains=search_query) | customers.filter(phone_number__icontains=search_query)
+
+    # Sort
+    sort_by = request.GET.get('sort', 'full_name')
+    valid_sorts = ['full_name', '-full_name', 'created_at', '-created_at']
+    if sort_by in valid_sorts:
+        customers = customers.order_by(sort_by)
+
+    context = {
+        'customers': customers,
+        'search_query': search_query,
+        'sort_by': sort_by,
+    }
+    return render(request, 'store/customer_list.html', context)
+
+
+@login_required
+def customer_detail(request, customer_id):
+    """Customer detail with order history"""
+    customer = get_object_or_404(Customer, id=customer_id)
+    orders = customer.orders.all().order_by('-created_at')
+    
+    total_debt = customer.get_total_debt()
+    total_orders = orders.count()
+    
+    context = {
+        'customer': customer,
+        'orders': orders,
+        'total_debt': total_debt,
+        'total_orders': total_orders,
+    }
+    return render(request, 'store/customer_detail.html', context)
+
+
+@login_required
+def customer_create(request):
+    """Create new customer"""
+    if request.method == 'POST':
+        form = CustomerForm(request.POST)
+        if form.is_valid():
+            customer = form.save()
+            messages.success(request, f'تم إضافة العميل "{customer.full_name}" بنجاح!')
+            return redirect('store:customer_list')
+        else:
+            messages.error(request, 'يرجى تصحيح الأخطاء في النموذج.')
+    else:
+        form = CustomerForm()
+
+    return render(request, 'store/customer_form.html', {'form': form, 'action': 'add'})
+
+
+@login_required
+def customer_edit(request, customer_id):
+    """Edit existing customer"""
+    customer = get_object_or_404(Customer, id=customer_id)
+
+    if request.method == 'POST':
+        form = CustomerForm(request.POST, instance=customer)
+        if form.is_valid():
+            customer = form.save()
+            messages.success(request, f'تم تحديث بيانات العميل "{customer.full_name}" بنجاح!')
+            return redirect('store:customer_detail', customer_id=customer.id)
+        else:
+            messages.error(request, 'يرجى تصحيح الأخطاء في النموذج.')
+    else:
+        form = CustomerForm(instance=customer)
+
+    return render(request, 'store/customer_form.html', {
+        'form': form,
+        'action': 'edit',
+        'customer': customer
+    })
+
+
+@login_required
+def customer_delete(request, customer_id):
+    """Delete customer (only if no orders)"""
+    customer = get_object_or_404(Customer, id=customer_id)
+    
+    # Check if customer has orders
+    if customer.orders.exists():
+        messages.error(request, f'لا يمكن حذف العميل "{customer.full_name}" لأنه لديه طلبات في النظام.')
+        return redirect('store:customer_detail', customer_id=customer.id)
+
+    if request.method == 'POST':
+        customer_name = customer.full_name
+        customer.delete()
+        messages.success(request, f'تم حذف العميل "{customer_name}" بنجاح!')
+        return redirect('store:customer_list')
+
+    return render(request, 'store/customer_confirm_delete.html', {'customer': customer})

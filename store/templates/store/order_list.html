@@ -71,6 +71,7 @@
                 <th><span>📱</span> الهاتف</th>
                 <th><span>📊</span> الحالة</th>
                 <th><span>💰</span> الإجمالي</th>
+                <th><span>💵</span> المتبقي</th>
                 <th><span>📅</span> التاريخ</th>
                 <th><span>⚙️</span> الإجراءات</th>
             </tr>
@@ -79,8 +80,8 @@
             {% for order in orders %}
             <tr>
                 <td><strong style="color: var(--primary-color);">#{{ order.id }}</strong></td>
-                <td><strong>{{ order.customer_name }}</strong></td>
-                <td style="direction: ltr; text-align: right;">{{ order.customer_phone }}</td>
+                <td><strong>{{ order.customer.full_name }}</strong></td>
+                <td style="direction: ltr; text-align: right;">{{ order.customer.phone_number|default:"-" }}</td>
                 <td>
                     <span class="badge badge-{{ order.status }}">
                         {% if order.status == 'completed' %}
@@ -91,6 +92,12 @@
                     </span>
                 </td>
                 <td><span class="price">{{ order.get_total_price }} ج.م</span></td>
+                <td>
+                    <span class="price" style="color: {% if order.is_fully_paid %}var(--success-color){% else %}var(--danger-color){% endif %}; font-weight: 700;">
+                        {{ order.get_remaining_amount }} ج.م
+                        {% if order.is_fully_paid %}<span style="font-size: 0.8rem;">✓</span>{% endif %}
+                    </span>
+                </td>
                 <td>{{ order.created_at|date:"Y/m/d - H:i" }}</td>
                 <td>
                     <a href="{% url 'store:order_detail' order.id %}" class="btn btn-sm">

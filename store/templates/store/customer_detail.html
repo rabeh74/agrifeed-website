@@ -1,0 +1,144 @@
+{% extends 'store/base.html' %}
+
+{% block title %}{{ customer.full_name }} - Agree Feed{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <a href="{% url 'store:customer_list' %}" class="btn btn-secondary">
+        <span>←</span> العودة للعملاء
+    </a>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{% url 'store:customer_edit' customer.id %}" class="btn">
+            <span>✏️</span> تعديل
+        </a>
+        <a href="{% url 'store:customer_delete' customer.id %}" class="btn btn-danger">
+            <span>🗑️</span> حذف
+        </a>
+    </div>
+</div>
+
+<div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1.5rem; align-items: start;">
+    <!-- Customer Info Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                <span>👤</span> معلومات العميل
+            </h2>
+        </div>
+
+        <div>
+            <div class="info-row">
+                <span class="info-label">الاسم الكامل:</span>
+                <span class="info-value"><strong>{{ customer.full_name }}</strong></span>
+            </div>
+
+            {% if customer.phone_number %}
+            <div class="info-row">
+                <span class="info-label">رقم الهاتف:</span>
+                <span class="info-value" style="direction: ltr; text-align: left;">{{ customer.phone_number }}</span>
+            </div>
+            {% endif %}
+
+            <div class="info-row">
+                <span class="info-label">تاريخ الإضافة:</span>
+                <span class="info-value">{{ customer.created_at|date:"Y/m/d - H:i" }}</span>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-100);">
+                <h4 style="font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📊</span> إحصائيات
+                </h4>
+                <div class="info-row">
+                    <span class="info-label">عدد الطلبات:</span>
+                    <span class="info-value" style="font-weight: 600;">{{ total_orders }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">إجمالي الديون:</span>
+                    <span class="info-value" style="color: {% if total_debt > 0 %}var(--danger-color){% else %}var(--success-color){% endif %}; font-weight: 700; font-size: 1.1rem;">
+                        {{ total_debt }} ج.م
+                        {% if total_debt == 0 %}
+                            <span style="font-size: 0.9rem;">✓</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order History Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title" style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📋</span> سجل الطلبات
+            </h3>
+        </div>
+
+        {% if orders %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الطلب</th>
+                        <th>الحالة</th>
+                        <th>الإجمالي</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th>التاريخ</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong style="color: var(--primary-color);">#{{ order.id }}</strong></td>
+                        <td>
+                            <span class="badge badge-{{ order.status }}">
+                                {% if order.status == 'completed' %}
+                                    ✓ مكتمل
+                                {% else %}
+                                    ✕ ملغي
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td><span class="price">{{ order.get_total_price }} ج.م</span></td>
+                        <td><span class="price" style="color: var(--success-color);">{{ order.paid_amount }} ج.م</span></td>
+                        <td>
+                            <span class="price" style="color: {% if order.is_fully_paid %}var(--success-color){% else %}var(--danger-color){% endif %}; font-weight: 700;">
+                                {{ order.get_remaining_amount }} ج.م
+                                {% if order.is_fully_paid %}<span style="font-size: 0.8rem;">✓</span>{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at|date:"Y/m/d" }}</td>
+                        <td>
+                            <a href="{% url 'store:order_detail' order.id %}" class="btn btn-sm">
+                                <span>👁️</span> عرض
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <p>لا توجد طلبات لهذا العميل بعد</p>
+            <a href="{% url 'store:create_order' %}" class="btn btn-success">
+                <span>🛒</span> إنشاء طلب جديد
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    @media (max-width: 968px) {
+        .grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+{% endblock %}
+

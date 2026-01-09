@@ -1,0 +1,113 @@
+{% extends 'store/base.html' %}
+
+{% block title %}العملاء - Agree Feed{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><span>👥</span> قائمة العملاء</h2>
+    <a href="{% url 'store:customer_create' %}" class="btn btn-success">
+        <span>➕</span> عميل جديد
+    </a>
+</div>
+
+<!-- Search Section -->
+<div class="card">
+    <form method="get" action="{% url 'store:customer_list' %}">
+        <div class="grid grid-3">
+            <!-- Search Box -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>🔍 بحث</label>
+                <input type="text" name="search" class="form-control" placeholder="ابحث باسم العميل أو الهاتف..." value="{{ search_query }}">
+            </div>
+
+            <!-- Sort By -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>🔄 ترتيب حسب</label>
+                <select name="sort" class="form-control">
+                    <option value="full_name" {% if sort_by == 'full_name' %}selected{% endif %}>الاسم (أ-ي)</option>
+                    <option value="-full_name" {% if sort_by == '-full_name' %}selected{% endif %}>الاسم (ي-أ)</option>
+                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>الأحدث</option>
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>الأقدم</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn" style="width: 100%;">
+                    <span>🔍</span> تطبيق
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Customers Count -->
+{% if search_query %}
+<div class="card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-right: 4px solid #3b82f6;">
+    <p style="margin: 0; color: #1e40af; font-weight: 600;">
+        <span>ℹ️</span> تم العثور على {{ customers.count }} عميل في نتائج البحث عن "{{ search_query }}"
+    </p>
+</div>
+{% endif %}
+
+{% if customers %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th><span>👤</span> الاسم الكامل</th>
+                <th><span>📱</span> رقم الهاتف</th>
+                <th><span>💰</span> إجمالي الديون</th>
+                <th><span>📋</span> عدد الطلبات</th>
+                <th><span>📅</span> تاريخ الإضافة</th>
+                <th><span>⚙️</span> الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td><strong>{{ customer.full_name }}</strong></td>
+                <td style="direction: ltr; text-align: right;">{{ customer.phone_number|default:"-" }}</td>
+                <td>
+                    <span class="price" style="color: {% if customer.get_total_debt > 0 %}var(--danger-color){% else %}var(--success-color){% endif %}; font-weight: 700;">
+                        {{ customer.get_total_debt }} ج.م
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-completed">{{ customer.orders.count }}</span>
+                </td>
+                <td>{{ customer.created_at|date:"Y/m/d" }}</td>
+                <td>
+                    <a href="{% url 'store:customer_detail' customer.id %}" class="btn btn-sm">
+                        <span>👁️</span> عرض
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card empty-state">
+    <div class="empty-state-icon">👥</div>
+    <h3>لا يوجد عملاء</h3>
+    <p>
+        {% if search_query %}
+            لم يتم العثور على عملاء تطابق بحثك عن "{{ search_query }}"
+        {% else %}
+            لا يوجد عملاء حالياً في النظام
+        {% endif %}
+    </p>
+    {% if search_query %}
+        <a href="{% url 'store:customer_list' %}" class="btn">
+            <span>↻</span> عرض جميع العملاء
+        </a>
+    {% else %}
+        <a href="{% url 'store:customer_create' %}" class="btn btn-success">
+            <span>➕</span> إضافة أول عميل
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
